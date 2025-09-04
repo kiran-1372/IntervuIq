@@ -2,41 +2,74 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* IntervuIQ Design System - All colors, gradients, fonts, etc defined here. 
+All colors MUST be HSL for consistency.
 */
 
 @layer base {
   :root {
+    /* Core Brand Colors */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 210 11% 15%;
 
+    /* Brand Identity - Professional Interview Platform */
+    --primary: 238 75% 65%;        /* Indigo 500 - Trust, Intelligence */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 243 75% 70%;   /* Lighter indigo for glows */
+    
+    --secondary: 158 64% 52%;      /* Emerald 500 - Growth, Success */
+    --secondary-foreground: 0 0% 100%;
+    --secondary-glow: 160 67% 56%; 
+    
+    --accent: 43 96% 56%;          /* Amber 500 - Energy, Milestones */
+    --accent-foreground: 25 95% 11%;
+    
+    --support: 199 89% 48%;        /* Sky 500 - Links, Information */
+    --support-foreground: 0 0% 100%;
+
+    /* Surface Colors */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 210 11% 15%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 210 11% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Interactive States */
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 238 75% 65%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Semantic Colors */
+    --success: 142 76% 36%;        /* Success green */
+    --success-foreground: 0 0% 100%;
+    --warning: 43 96% 56%;         /* Warning amber */
+    --warning-foreground: 25 95% 11%;
+    --error: 0 84% 60%;           /* Error red */
+    --error-foreground: 0 0% 100%;
+    --info: 221 83% 53%;          /* Info blue */
+    --info-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Design System Values */
+    --radius: 0.75rem;             /* Rounded-xl for modern feel */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-secondary: linear-gradient(135deg, hsl(var(--secondary)), hsl(var(--secondary-glow)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--secondary) / 0.05));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100% / 0.8), hsl(0 0% 100% / 0.4));
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Shadows */
+    --shadow-sm: 0 2px 4px hsl(var(--primary) / 0.05);
+    --shadow-md: 0 4px 12px hsl(var(--primary) / 0.1);
+    --shadow-lg: 0 8px 25px hsl(var(--primary) / 0.15);
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.3);
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
     --sidebar-background: 0 0% 98%;
 
@@ -56,33 +89,59 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    /* Dark Mode Adjustments */
+    --background: 215 28% 6%;      /* Deep charcoal */
+    --foreground: 210 40% 96%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    /* Brand colors remain consistent in dark mode */
+    --primary: 243 75% 70%;        /* Slightly lighter indigo for contrast */
+    --primary-foreground: 215 28% 6%;
+    --primary-glow: 248 75% 75%;
+    
+    --secondary: 160 67% 56%;      /* Slightly lighter emerald */
+    --secondary-foreground: 215 28% 6%;
+    --secondary-glow: 163 70% 60%;
+    
+    --accent: 48 96% 60%;          /* Slightly lighter amber */
+    --accent-foreground: 215 28% 6%;
+    
+    --support: 204 89% 52%;        /* Lighter sky blue */
+    --support-foreground: 215 28% 6%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    /* Dark Mode Surfaces */
+    --card: 215 25% 8%;           /* Slightly lighter than background */
+    --card-foreground: 210 40% 96%;
+    
+    --popover: 215 25% 8%;
+    --popover-foreground: 210 40% 96%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Dark Mode Interactive */
+    --muted: 215 25% 12%;
+    --muted-foreground: 215 20% 65%;
+    
+    --border: 215 25% 15%;
+    --input: 215 25% 12%;
+    --ring: 243 75% 70%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    /* Dark Mode Semantics */
+    --success: 150 76% 40%;
+    --success-foreground: 215 28% 6%;
+    --warning: 48 96% 60%;
+    --warning-foreground: 215 28% 6%;
+    --error: 0 84% 65%;
+    --error-foreground: 215 28% 6%;
+    --info: 226 83% 58%;
+    --info-foreground: 215 28% 6%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    /* Dark Mode Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--secondary) / 0.1));
+    --gradient-card: linear-gradient(135deg, hsl(var(--card)), hsl(215 25% 10%));
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* Dark Mode Shadows */
+    --shadow-sm: 0 2px 4px hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 12px hsl(0 0% 0% / 0.4);
+    --shadow-lg: 0 8px 25px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 40px hsl(var(--primary-glow) / 0.4);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -100,6 +159,70 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted/30;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+}
+
+@layer utilities {
+  /* Gradient utilities */
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-secondary {
+    background: var(--gradient-secondary);
+  }
+  
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+  
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+
+  /* Shadow utilities */
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Animation utilities */
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  .transition-bounce {
+    transition: var(--transition-bounce);
+  }
+
+  /* Typography utilities */
+  .text-gradient {
+    background: var(--gradient-primary);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
   }
 }
