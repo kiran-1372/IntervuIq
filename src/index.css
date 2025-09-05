@@ -12,19 +12,19 @@ All colors MUST be HSL for consistency.
     --background: 0 0% 100%;
     --foreground: 210 11% 15%;
 
-    /* Brand Identity - Professional Interview Platform */
-    --primary: 238 75% 65%;        /* Indigo 500 - Trust, Intelligence */
+    /* Brand Identity - Sea Green/Blue Interview Platform */
+    --primary: 173 58% 39%;        /* Sea Green - Trust, Growth */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 243 75% 70%;   /* Lighter indigo for glows */
+    --primary-glow: 173 45% 55%;   /* Lighter sea green for glows */
     
-    --secondary: 158 64% 52%;      /* Emerald 500 - Growth, Success */
+    --secondary: 197 71% 43%;      /* Ocean Blue - Depth, Stability */
     --secondary-foreground: 0 0% 100%;
-    --secondary-glow: 160 67% 56%; 
+    --secondary-glow: 197 50% 60%; 
     
-    --accent: 43 96% 56%;          /* Amber 500 - Energy, Milestones */
-    --accent-foreground: 25 95% 11%;
+    --accent: 184 77% 34%;         /* Teal - Energy, Progress */
+    --accent-foreground: 0 0% 100%;
     
-    --support: 199 89% 48%;        /* Sky 500 - Links, Information */
+    --support: 186 83% 29%;        /* Deep Teal - Links, Information */
     --support-foreground: 0 0% 100%;
 
     /* Surface Colors */
@@ -40,7 +40,7 @@ All colors MUST be HSL for consistency.
     
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 238 75% 65%;
+    --ring: 173 58% 39%;
 
     /* Semantic Colors */
     --success: 142 76% 36%;        /* Success green */
@@ -93,19 +93,19 @@ All colors MUST be HSL for consistency.
     --background: 215 28% 6%;      /* Deep charcoal */
     --foreground: 210 40% 96%;
 
-    /* Brand colors remain consistent in dark mode */
-    --primary: 243 75% 70%;        /* Slightly lighter indigo for contrast */
+    /* Brand colors adapted for dark mode */
+    --primary: 173 45% 55%;        /* Lighter sea green for contrast */
     --primary-foreground: 215 28% 6%;
-    --primary-glow: 248 75% 75%;
+    --primary-glow: 173 40% 65%;
     
-    --secondary: 160 67% 56%;      /* Slightly lighter emerald */
+    --secondary: 197 50% 60%;      /* Lighter ocean blue */
     --secondary-foreground: 215 28% 6%;
-    --secondary-glow: 163 70% 60%;
+    --secondary-glow: 197 45% 70%;
     
-    --accent: 48 96% 60%;          /* Slightly lighter amber */
+    --accent: 184 60% 50%;         /* Lighter teal */
     --accent-foreground: 215 28% 6%;
     
-    --support: 204 89% 52%;        /* Lighter sky blue */
+    --support: 186 65% 45%;        /* Lighter deep teal */
     --support-foreground: 215 28% 6%;
 
     /* Dark Mode Surfaces */
@@ -121,7 +121,7 @@ All colors MUST be HSL for consistency.
     
     --border: 215 25% 15%;
     --input: 215 25% 12%;
-    --ring: 243 75% 70%;
+    --ring: 173 45% 55%;
 
     /* Dark Mode Semantics */
     --success: 150 76% 40%;
