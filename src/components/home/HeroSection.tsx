@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Target, TrendingUp, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import heroImage from "@/assets/hero-interview.jpg";
 
 export function HeroSection() {
   const stats = [
@@ -109,22 +110,35 @@ export function HeroSection() {
             transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             className="relative rounded-2xl overflow-hidden shadow-2xl border"
           >
-            <div className="gradient-card p-8 h-96 flex items-center justify-center">
-              <div className="text-center space-y-4">
-                <div className="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto">
-                  <Target className="w-12 h-12 text-primary" />
+            <img 
+              src={heroImage} 
+              alt="Professional interview scene"
+              className="w-full h-96 object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-transparent to-transparent" />
+            
+            {/* Overlay Analytics Card */}
+            <div className="absolute bottom-4 left-4 right-4 bg-card/95 backdrop-blur-sm rounded-lg p-4 border">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold text-sm">Interview Progress</h3>
+              </div>
+              <div className="space-y-2">
+                <div className="w-full bg-muted rounded-full h-2">
+                  <motion.div 
+                    className="bg-primary h-2 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: "75%" }}
+                    transition={{ delay: 1.5, duration: 1.5 }}
+                  />
                 </div>
-                <h3 className="text-xl font-semibold">Interview Analytics</h3>
-                <div className="space-y-2">
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div className="bg-primary h-2 rounded-full w-3/4" />
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div className="bg-secondary h-2 rounded-full w-2/3" />
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div className="bg-accent h-2 rounded-full w-4/5" />
-                  </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <motion.div 
+                    className="bg-secondary h-2 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: "60%" }}
+                    transition={{ delay: 2, duration: 1.5 }}
+                  />
                 </div>
               </div>
             </div>

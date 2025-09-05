@@ -14,6 +14,9 @@ import {
   Clock
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import resumeAnalysisImage from "@/assets/resume-analysis.jpg";
+import teamPreparingImage from "@/assets/team-preparing.jpg";
+import successStoryImage from "@/assets/success-story.jpg";
 
 const features = [
   {
