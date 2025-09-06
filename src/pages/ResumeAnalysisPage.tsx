@@ -64,7 +64,7 @@ export function ResumeAnalysisPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="min-h-screen p-4 mx-auto max-w-7xl"
+      className="min-h-screen gradient-hero p-4 mx-auto max-w-7xl"
     >
       {/* Header */}
       <div className="mb-8">
@@ -93,7 +93,7 @@ export function ResumeAnalysisPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
         >
-          <Card className="p-6">
+          <Card className="p-6 gradient-card border-0 shadow-md">
             <h2 className="text-xl font-semibold mb-6">Upload Documents</h2>
             
             {/* Resume Upload */}
@@ -162,7 +162,7 @@ export function ResumeAnalysisPage() {
           {showResults ? (
             <div className="space-y-6">
               {/* Overall Score */}
-              <Card className="p-6">
+              <Card className="p-6 gradient-card border-0 shadow-md">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Match Score</h3>
                   <div className="text-2xl font-bold text-primary">{mockAnalysis.score}%</div>
@@ -174,7 +174,7 @@ export function ResumeAnalysisPage() {
               </Card>
 
               {/* Strengths */}
-              <Card className="p-6">
+              <Card className="p-6 gradient-card border-0 shadow-md">
                 <div className="flex items-center gap-2 mb-4">
                   <CheckCircle2 className="w-5 h-5 text-success" />
                   <h3 className="text-lg font-semibold">Strengths</h3>
@@ -190,7 +190,7 @@ export function ResumeAnalysisPage() {
               </Card>
 
               {/* Improvements */}
-              <Card className="p-6">
+              <Card className="p-6 gradient-card border-0 shadow-md">
                 <div className="flex items-center gap-2 mb-4">
                   <AlertCircle className="w-5 h-5 text-warning" />
                   <h3 className="text-lg font-semibold">Areas for Improvement</h3>
@@ -206,7 +206,7 @@ export function ResumeAnalysisPage() {
               </Card>
 
               {/* Missing Keywords */}
-              <Card className="p-6">
+              <Card className="p-6 gradient-card border-0 shadow-md">
                 <div className="flex items-center gap-2 mb-4">
                   <TrendingUp className="w-5 h-5 text-info" />
                   <h3 className="text-lg font-semibold">Missing Keywords</h3>
@@ -221,7 +221,7 @@ export function ResumeAnalysisPage() {
               </Card>
 
               {/* Suggested Bullets */}
-              <Card className="p-6">
+              <Card className="p-6 gradient-card border-0 shadow-md">
                 <h3 className="text-lg font-semibold mb-4">Suggested Bullet Points</h3>
                 <div className="space-y-3">
                   {mockAnalysis.suggestedBullets.map((bullet, index) => (
@@ -254,7 +254,7 @@ export function ResumeAnalysisPage() {
               </div>
             </div>
           ) : (
-            <Card className="p-12 text-center">
+            <Card className="p-12 text-center gradient-card border-0 shadow-md">
               <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Ready to Analyze</h3>
               <p className="text-muted-foreground">

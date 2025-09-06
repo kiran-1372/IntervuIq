@@ -91,7 +91,7 @@ export function InterviewsPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="min-h-screen p-4 mx-auto max-w-7xl"
+      className="min-h-screen gradient-hero p-4 mx-auto max-w-7xl"
     >
       {/* Header */}
       <div className="mb-8">
@@ -120,7 +120,7 @@ export function InterviewsPage() {
         transition={{ delay: 0.3, duration: 0.6 }}
         className="grid gap-6 md:grid-cols-4 mb-8"
       >
-        <Card className="p-6">
+        <Card className="p-6 gradient-card border-0 shadow-md hover:shadow-glow transition-all">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
               <Target className="w-5 h-5 text-primary" />
@@ -132,7 +132,7 @@ export function InterviewsPage() {
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 gradient-card border-0 shadow-md hover:shadow-glow transition-all">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
               <CheckCircle2 className="w-5 h-5 text-success" />
@@ -144,7 +144,7 @@ export function InterviewsPage() {
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 gradient-card border-0 shadow-md hover:shadow-glow transition-all">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-secondary" />
@@ -156,7 +156,7 @@ export function InterviewsPage() {
           </div>
         </Card>
 
-        <Card className="p-6">
+        <Card className="p-6 gradient-card border-0 shadow-md hover:shadow-glow transition-all">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
               <Clock className="w-5 h-5 text-accent" />
@@ -218,7 +218,7 @@ export function InterviewsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 + index * 0.1, duration: 0.6 }}
             >
-              <Card className="p-6 hover:shadow-lg transition-all duration-300 group cursor-pointer">
+              <Card className="p-6 gradient-card border-0 shadow-md hover:shadow-glow transition-all duration-300 group cursor-pointer">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">

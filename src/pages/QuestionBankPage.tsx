@@ -102,7 +102,7 @@ export function QuestionBankPage() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="min-h-screen p-4 mx-auto max-w-7xl"
+      className="min-h-screen gradient-hero p-4 mx-auto max-w-7xl"
     >
       {/* Header */}
       <div className="mb-8">
@@ -138,9 +138,9 @@ export function QuestionBankPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 + index * 0.1, duration: 0.5 }}
           >
-            <Card className="p-4 cursor-pointer hover:shadow-md transition-all duration-300 group">
+            <Card className="p-4 cursor-pointer gradient-card border-0 shadow-md hover:shadow-glow transition-all duration-300 group">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                   <category.icon className={`w-5 h-5 ${category.color}`} />
                 </div>
                 <div>
@@ -206,7 +206,7 @@ export function QuestionBankPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 + index * 0.05, duration: 0.6 }}
           >
-            <Card className="p-6 hover:shadow-md transition-all duration-300 cursor-pointer group">
+            <Card className="p-6 gradient-card border-0 shadow-md hover:shadow-glow transition-all duration-300 cursor-pointer group">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
