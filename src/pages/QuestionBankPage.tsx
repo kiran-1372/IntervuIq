@@ -22,54 +22,19 @@ import {
   Layers,
   Brain
 } from "lucide-react";
+import { publicQuestions } from "@/data/dummyData";
+import { QuestionDetailModal } from "@/components/questions/QuestionDetailModal";
 
-const mockQuestions = [
-  {
-    id: 1,
-    question: "Design a URL shortener like bit.ly",
-    category: "System Design",
-    difficulty: "Hard",
-    company: "Google",
-    frequency: 89,
-    topics: ["Distributed Systems", "Databases", "Caching"]
-  },
-  {
-    id: 2,
-    question: "Implement LRU Cache",
-    category: "Algorithms",
-    difficulty: "Medium",
-    company: "Amazon",
-    frequency: 95,
-    topics: ["Hash Maps", "Linked Lists", "Data Structures"]
-  },
-  {
-    id: 3,
-    question: "Tell me about a time you had to deal with a difficult teammate",
-    category: "Behavioral",
-    difficulty: "Medium",
-    company: "Meta",
-    frequency: 78,
-    topics: ["Leadership", "Conflict Resolution", "Communication"]
-  },
-  {
-    id: 4,
-    question: "Design Instagram's feed system",
-    category: "System Design",
-    difficulty: "Hard",
-    company: "Meta",
-    frequency: 82,
-    topics: ["Feed Generation", "Social Networks", "Real-time Systems"]
-  },
-  {
-    id: 5,
-    question: "Find all anagrams in a string array",
-    category: "Algorithms",
-    difficulty: "Medium",
-    company: "Microsoft",
-    frequency: 67,
-    topics: ["Hash Maps", "String Processing", "Grouping"]
-  },
-];
+// Convert public questions to the expected format
+const mockQuestions = publicQuestions.map((q, index) => ({
+  id: index + 1,
+  question: q.question,
+  category: q.topics[0] || 'Technical', // Use first topic as category
+  difficulty: q.difficulty.charAt(0).toUpperCase() + q.difficulty.slice(1) as 'Easy' | 'Medium' | 'Hard',
+  company: q.company,
+  frequency: Math.floor(Math.random() * 40) + 60, // Random frequency 60-99
+  topics: q.topics
+}));
 
 const categories = [
   { name: "System Design", icon: Layers, count: 124, color: "text-primary" },
@@ -88,6 +53,16 @@ export function QuestionBankPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [difficultyFilter, setDifficultyFilter] = useState("all");
+  const [selectedQuestion, setSelectedQuestion] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleQuestionClick = (questionId: number) => {
+    const question = publicQuestions[questionId - 1];
+    if (question) {
+      setSelectedQuestion(question);
+      setIsModalOpen(true);
+    }
+  };
 
   const filteredQuestions = mockQuestions.filter(question => {
     const matchesSearch = question.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -206,7 +181,10 @@ export function QuestionBankPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 + index * 0.05, duration: 0.6 }}
           >
-            <Card className="p-6 gradient-card border-0 shadow-md hover:shadow-glow transition-all duration-300 cursor-pointer group">
+            <Card 
+              className="p-6 gradient-card border-0 shadow-md hover:shadow-glow transition-all duration-300 cursor-pointer group"
+              onClick={() => handleQuestionClick(question.id)}
+            >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
@@ -261,6 +239,12 @@ export function QuestionBankPage() {
           </p>
         </motion.div>
       )}
+
+      <QuestionDetailModal
+        question={selectedQuestion}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </motion.div>
   );
 }

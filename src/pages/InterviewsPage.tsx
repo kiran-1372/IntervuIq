@@ -24,49 +24,32 @@ import {
   XCircle,
   AlertCircle
 } from "lucide-react";
+import { detailedInterviews, DetailedInterview } from "@/data/dummyData";
+import { InterviewDetailModal } from "@/components/interviews/InterviewDetailModal";
 
-const mockInterviews = [
-  {
-    id: 1,
-    company: "Google",
-    role: "Software Engineer",
-    date: "2024-01-15",
-    status: "offer",
-    rounds: { completed: 4, total: 4 },
-    confidence: 85,
-    tags: ["System Design", "Algorithms", "Behavioral"]
+// Convert detailed interviews to summary format for the list view
+const mockInterviews = detailedInterviews.map(interview => ({
+  id: parseInt(interview.id),
+  company: interview.company,
+  role: interview.role,
+  date: interview.date,
+  status: interview.status,
+  rounds: { 
+    completed: interview.rounds.filter(r => r.status === 'completed').length, 
+    total: interview.rounds.length 
   },
-  {
-    id: 2,
-    company: "Microsoft",
-    role: "Senior SDE",
-    date: "2024-01-10",
-    status: "rejected",
-    rounds: { completed: 3, total: 4 },
-    confidence: 70,
-    tags: ["Coding", "System Design"]
-  },
-  {
-    id: 3,
-    company: "Amazon",
-    role: "Principal Engineer",
-    date: "2024-01-08",
-    status: "pending",
-    rounds: { completed: 2, total: 5 },
-    confidence: 78,
-    tags: ["Leadership", "System Design", "Behavioral"]
-  },
-  {
-    id: 4,
-    company: "Meta",
-    role: "Staff Engineer",
-    date: "2024-01-05",
-    status: "interviewing",
-    rounds: { completed: 1, total: 4 },
-    confidence: 82,
-    tags: ["Product Design", "Algorithms"]
-  }
-];
+  confidence: Math.round(
+    interview.rounds
+      .filter(r => r.status === 'completed')
+      .reduce((sum, r) => sum + r.confidence, 0) / 
+    Math.max(interview.rounds.filter(r => r.status === 'completed').length, 1)
+  ),
+  tags: Array.from(new Set(
+    interview.rounds.flatMap(r => 
+      r.questions.flatMap(q => q.topics.slice(0, 2))
+    )
+  )).slice(0, 3)
+}));
 
 const statusConfig = {
   offer: { label: "Offer", color: "bg-success text-success-foreground", icon: CheckCircle2 },
@@ -78,6 +61,16 @@ const statusConfig = {
 export function InterviewsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedInterview, setSelectedInterview] = useState<DetailedInterview | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleInterviewClick = (interviewId: number) => {
+    const interview = detailedInterviews.find(i => i.id === interviewId.toString());
+    if (interview) {
+      setSelectedInterview(interview);
+      setIsModalOpen(true);
+    }
+  };
 
   const filteredInterviews = mockInterviews.filter(interview => {
     const matchesSearch = interview.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -218,7 +211,10 @@ export function InterviewsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 + index * 0.1, duration: 0.6 }}
             >
-              <Card className="p-6 gradient-card border-0 shadow-md hover:shadow-glow transition-all duration-300 group cursor-pointer">
+              <Card 
+                className="p-6 gradient-card border-0 shadow-md hover:shadow-glow transition-all duration-300 group cursor-pointer"
+                onClick={() => handleInterviewClick(interview.id)}
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
@@ -307,6 +303,12 @@ export function InterviewsPage() {
           </Button>
         </motion.div>
       )}
+
+      <InterviewDetailModal
+        interview={selectedInterview}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </motion.div>
   );
 }

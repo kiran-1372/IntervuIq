@@ -22,56 +22,16 @@ import {
   Zap,
   CheckCircle2,
   TrendingUp,
-  Users
+  Users,
+  ExternalLink,
+  Upload,
+  FileText
 } from "lucide-react";
+import { coldEmailTemplates, generateColdEmail } from "@/data/dummyData";
 
-const emailTemplates = [
-  {
-    id: 1,
-    name: "Software Engineer",
-    subject: "Passionate Software Engineer - {Company} Opportunities",
-    performance: "High",
-    responseRate: "24%"
-  },
-  {
-    id: 2,
-    name: "Product Manager",
-    subject: "Product Strategy Discussion - {Company}",
-    performance: "Medium",
-    responseRate: "18%"
-  },
-  {
-    id: 3,
-    name: "Data Scientist",
-    subject: "ML/Data Science Expertise for {Company}",
-    performance: "High", 
-    responseRate: "22%"
-  }
-];
+// Use imported templates
 
-const mockGeneratedEmail = {
-  subject: "Passionate Software Engineer - Google Opportunities",
-  body: `Hi Sarah,
-
-I hope this email finds you well! I'm John Smith, a software engineer with 5 years of experience in full-stack development and a passion for building scalable systems.
-
-I've been following Google's innovative work in cloud computing and AI, particularly your recent advances in machine learning infrastructure. Your team's commitment to solving complex technical challenges at scale really resonates with my career goals.
-
-In my current role at TechCorp, I've:
-• Led the development of microservices handling 10M+ daily requests
-• Reduced infrastructure costs by 35% through cloud optimization
-• Mentored a team of 6 junior developers
-
-I'd love to learn more about software engineering opportunities at Google, particularly in your Cloud Platform team. Would you be open to a brief 15-minute conversation about potential openings?
-
-I've attached my resume for your review. Thank you for your time, and I look forward to hearing from you!
-
-Best regards,
-John Smith
-john.smith@email.com
-(555) 123-4567
-LinkedIn: linkedin.com/in/johnsmith`
-};
+// Will use dynamic generation
 
 export function ColdEmailPage() {
   const [formData, setFormData] = useState({
@@ -80,18 +40,43 @@ export function ColdEmailPage() {
     company: "",
     role: "",
     tone: "professional",
-    customMessage: ""
+    customMessage: "",
+    jobUrl: "",
+    resumeFile: null as File | null
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState("");
+  const [generatedEmail, setGeneratedEmail] = useState<any>(null);
 
   const handleGenerate = () => {
     setIsGenerating(true);
     setTimeout(() => {
+      const emailData = generateColdEmail(formData);
+      setGeneratedEmail(emailData);
       setIsGenerating(false);
       setShowResult(true);
     }, 2000);
+  };
+
+  const handleJobUrlExtract = () => {
+    if (formData.jobUrl) {
+      // Simulate HR email extraction
+      const domain = formData.jobUrl.split('/')[2]?.replace('www.', '');
+      const hrEmail = `hr@${domain}`;
+      setFormData(prev => ({ 
+        ...prev, 
+        recruiterEmail: hrEmail,
+        company: domain?.split('.')[0] || ''
+      }));
+    }
+  };
+
+  const handleResumeUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setFormData(prev => ({ ...prev, resumeFile: file }));
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -183,12 +168,57 @@ export function ColdEmailPage() {
           <Card className="p-6 gradient-card border-0 shadow-md">
             <h2 className="text-xl font-semibold mb-6">Email Details</h2>
             
-            <div className="space-y-6">
+              <div className="space-y-6">
+              {/* Resume Upload */}
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Upload Resume</Label>
+                <div className="border-2 border-dashed border-border rounded-lg p-4 text-center hover:border-primary/50 transition-colors">
+                  <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {formData.resumeFile ? `Uploaded: ${formData.resumeFile.name}` : "Upload your resume for better personalization"}
+                  </p>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx"
+                      onChange={handleResumeUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <Button variant="outline" size="sm">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Choose File
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Job URL */}
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Job URL (Optional)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="https://company.com/jobs/software-engineer"
+                    value={formData.jobUrl}
+                    onChange={(e) => handleInputChange('jobUrl', e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button 
+                    variant="outline" 
+                    onClick={handleJobUrlExtract}
+                    disabled={!formData.jobUrl}
+                    className="gap-2"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Extract HR
+                  </Button>
+                </div>
+              </div>
+
               {/* Template Selection */}
               <div>
                 <Label className="text-sm font-medium mb-3 block">Choose Template</Label>
                 <div className="grid gap-3">
-                  {emailTemplates.map((template) => (
+                  {coldEmailTemplates.map((template) => (
                     <div
                       key={template.id}
                       className={`p-3 border rounded-lg cursor-pointer transition-all ${
@@ -327,7 +357,7 @@ export function ColdEmailPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => copyToClipboard(`${mockGeneratedEmail.subject}\n\n${mockGeneratedEmail.body}`)}
+                    onClick={() => copyToClipboard(`${generatedEmail?.subject}\n\n${generatedEmail?.body}`)}
                     className="gap-2"
                   >
                     <Copy className="w-4 h-4" />
@@ -349,7 +379,7 @@ export function ColdEmailPage() {
                 <div>
                   <Label className="text-sm font-medium">Subject</Label>
                   <div className="mt-1 p-3 bg-muted rounded-lg">
-                    <p className="text-sm font-medium">{mockGeneratedEmail.subject}</p>
+                    <p className="text-sm font-medium">{generatedEmail?.subject}</p>
                   </div>
                 </div>
 
@@ -357,10 +387,19 @@ export function ColdEmailPage() {
                   <Label className="text-sm font-medium">Email Body</Label>
                   <div className="mt-1 p-4 bg-muted rounded-lg">
                     <pre className="text-sm whitespace-pre-wrap font-sans">
-                      {mockGeneratedEmail.body}
+                      {generatedEmail?.body}
                     </pre>
                   </div>
                 </div>
+
+                {generatedEmail?.hrEmail && (
+                  <div>
+                    <Label className="text-sm font-medium">Extracted HR Email</Label>
+                    <div className="mt-1 p-3 bg-success/5 border border-success/20 rounded-lg">
+                      <p className="text-sm font-medium text-success">{generatedEmail.hrEmail}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 mt-6">
@@ -377,11 +416,39 @@ export function ColdEmailPage() {
               <div className="mt-6 p-4 bg-success/5 border border-success/20 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle2 className="w-4 h-4 text-success" />
-                  <span className="text-sm font-medium text-success">Email Quality Score: 92%</span>
+                  <span className="text-sm font-medium text-success">Email Quality Score: {generatedEmail?.qualityScore}%</span>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mb-3">
                   Excellent personalization and professional tone. High probability of response.
                 </p>
+                
+                {generatedEmail?.personalizedElements && (
+                  <div>
+                    <h4 className="font-medium text-sm mb-2">Personalized Elements:</h4>
+                    <ul className="space-y-1">
+                      {generatedEmail.personalizedElements.map((element: string, index: number) => (
+                        <li key={index} className="text-xs text-muted-foreground flex items-center gap-2">
+                          <div className="w-1 h-1 bg-success rounded-full" />
+                          {element}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {generatedEmail?.improvements && (
+                  <div className="mt-4">
+                    <h4 className="font-medium text-sm mb-2">Suggestions for Improvement:</h4>
+                    <ul className="space-y-1">
+                      {generatedEmail.improvements.map((improvement: string, index: number) => (
+                        <li key={index} className="text-xs text-muted-foreground flex items-center gap-2">
+                          <div className="w-1 h-1 bg-amber-500 rounded-full" />
+                          {improvement}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </Card>
           ) : (
