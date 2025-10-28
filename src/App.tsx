@@ -16,6 +16,7 @@ import { ResumeAnalysisPage } from "./pages/ResumeAnalysisPage";
 import { ColdEmailPage } from "./pages/ColdEmailPage";
 import { QuestionBankPage } from "./pages/QuestionBankPage";
 import { ContactPage } from "./pages/ContactPage";
+import AddInterviewPage from "./pages/AddInterviewPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ function AnimatedRoutes() {
         <Route path="/cold-email" element={<ColdEmailPage />} />
         <Route path="/questions" element={<QuestionBankPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/add-interview" element={<AddInterviewPage />} />
         {/* Legacy routes for backward compatibility */}
         <Route path="/interviews" element={<InterviewsPage />} />
         <Route path="/resume" element={<ResumeAnalysisPage />} />
