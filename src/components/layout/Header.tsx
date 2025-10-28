@@ -26,12 +26,14 @@ import {
   Settings,
   LogOut,
   Home,
-  MessageSquare
+  MessageSquare,
+  PlusCircle
 } from "lucide-react";
 
 const navigation = [
   { name: "Home", href: "/", icon: Home },
   { name: "Track Interviews", href: "/track-interviews", icon: Target },
+  { name: "Add Interview", href: "/add-interview", icon: PlusCircle },
   { name: "Resume Analysis", href: "/resume-analysis", icon: FileText },
   { name: "Cold Email", href: "/cold-email", icon: Mail },
   { name: "Questions", href: "/questions", icon: BookOpen },
