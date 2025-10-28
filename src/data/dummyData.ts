@@ -231,7 +231,7 @@ export const detailedInterviews: DetailedInterview[] = [
           {
             id: '2-1-1',
             question: 'Find all anagrams in a string array',
-            topics: ['Hash Maps', 'String Processing', 'Grouping'],
+            topics: ['Hash Maps', 'String Ping', 'Grouping'],
             difficulty: 'medium',
             yourAnswer: 'Used HashMap with sorted strings as keys to group anagrams',
             feedback: 'Perfect solution with clean implementation',
