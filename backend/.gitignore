@@ -1,0 +1,4 @@
+# Backend-only ignores (optional)
+.env
+.env.*
+node_modules
