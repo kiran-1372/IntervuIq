@@ -2,30 +2,35 @@ import { User } from "../models/User.js";
 import { generateToken } from "../utils/generateToken.js";
 
 // 📝 Register new user
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
     const userExists = await User.findOne({ email });
 
-    if (userExists) return res.status(400).json({ message: "User already exists" });
+    if (userExists)
+      return res.status(400).json({
+        message: "User already exists",
+        errors: { email: "Email is already registered" },
+      });
 
     const user = await User.create({ name, email, password });
     const token = generateToken(user._id);
 
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "strict",
-      secure: false,
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/",
     });
 
     res.status(201).json({ message: "User registered successfully", user });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    return next(error);
   }
 };
 
-export const loginUser = async (req, res) => {
+export const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
@@ -33,13 +38,19 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({
+        message: "Invalid email or password",
+        errors: { email: "No account found with this email" },
+      });
     }
 
     // 2️⃣ Compare password
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid email or password" });
+      return res.status(401).json({
+        message: "Invalid email or password",
+        errors: { password: "Incorrect password" },
+      });
     }
 
     // 3️⃣ Generate JWT token
@@ -48,9 +59,11 @@ export const loginUser = async (req, res) => {
     // 4️⃣ Set cookie
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "strict",
-      secure: false, // set true in production
+      sameSite: 'lax',
+      secure: false, // set to true in production
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/',
+      domain: 'localhost'
     });
 
     // 5️⃣ Send response
@@ -65,7 +78,7 @@ export const loginUser = async (req, res) => {
       token,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    return next(error);
   }
 };
 
@@ -76,7 +89,7 @@ export const logoutUser = async (req, res) => {
 };
 
 // GET LOGGED-IN USER DETAILS
-export const getCurrentUser = async (req, res) => {
+export const getCurrentUser = async (req, res, next) => {
   try {
     // req.user is set by the protect middleware
     if (!req.user) {
@@ -97,7 +110,7 @@ export const getCurrentUser = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    return next(error);
   }
 };
 

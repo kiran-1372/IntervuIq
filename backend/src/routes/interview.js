@@ -5,8 +5,8 @@ import {
   deleteInterview,
   getUserInterviews,
   getInterviewById,
-  saveInterviewAsDraft,
-  submitInterview,
+  //saveInterviewAsDraft,
+   submitInterview,
 } from "../controllers/interview.js"
 import { protect } from "../middleware/authMiddleware.js";
 
@@ -30,6 +30,14 @@ router.post("/", createInterview);
 router.get("/", getUserInterviews);
 
 /**
+ * @route   PATCH /api/interviews/:id/submit
+ * @desc    Submit final interview details
+ * @access  Private
+ * NOTE: Must be before /:id route to avoid route conflicts
+ */
+router.patch("/:id/submit", submitInterview);
+
+/**
  * @route   GET /api/interviews/:id
  * @desc    Get single interview details by ID
  * @access  Private
@@ -42,20 +50,6 @@ router.get("/:id", getInterviewById);
  * @access  Private
  */
 router.put("/:id", updateInterview);
-
-/**
- * @route   PATCH /api/interviews/:id/draft
- * @desc    Save interview as draft (partial save)
- * @access  Private
- */
-router.patch("/:id/draft", saveInterviewAsDraft);
-
-/**
- * @route   PATCH /api/interviews/:id/submit
- * @desc    Submit final interview details
- * @access  Private
- */
-router.patch("/:id/submit", submitInterview);
 
 /**
  * @route   DELETE /api/interviews/:id

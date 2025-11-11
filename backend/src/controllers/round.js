@@ -1,11 +1,11 @@
 import Round from "../models/Round.js";
 import Interview from "../models/Interview.js";
-import Question from "../models/Question.js";
+import Question from "../models/Questions.js";
 
 /**
  * ✅ Create a new round for a specific interview
  */
-export const createRound = async (req, res) => {
+export const createRound = async (req, res, next) => {
   try {
     const { interviewId } = req.params;
     const userId = req.user._id; // from auth middleware
@@ -19,7 +19,10 @@ export const createRound = async (req, res) => {
 
     // Basic validation
     if (!roundName) {
-      return res.status(400).json({ message: "Round name is required" });
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: { name: "Round name is required" },
+      });
     }
 
     // Create new round
@@ -43,14 +46,14 @@ export const createRound = async (req, res) => {
       round,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error creating round", error: error.message });
+    return next(error);
   }
 };
 
 /**
  * 🧾 Get all rounds for a specific interview
  */
-export const getRoundsByInterview = async (req, res) => {
+export const getRoundsByInterview = async (req, res, next) => {
   try {
     const { interviewId } = req.params;
     const userId = req.user._id;
@@ -61,14 +64,14 @@ export const getRoundsByInterview = async (req, res) => {
 
     res.status(200).json({ rounds });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching rounds", error: error.message });
+    return next(error);
   }
 };
 
 /**
  * ✏️ Update a round (partial or final)
  */
-export const updateRound = async (req, res) => {
+export const updateRound = async (req, res, next) => {
   try {
     const { roundId } = req.params;
     const userId = req.user._id;
@@ -94,14 +97,14 @@ export const updateRound = async (req, res) => {
       round,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error updating round", error: error.message });
+    return next(error);
   }
 };
 
 /**
  * ❌ Delete a round and its questions
  */
-export const deleteRound = async (req, res) => {
+export const deleteRound = async (req, res, next) => {
   try {
     const { roundId } = req.params;
     const userId = req.user._id;
@@ -124,14 +127,14 @@ export const deleteRound = async (req, res) => {
 
     res.status(200).json({ message: "Round and its questions deleted successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting round", error: error.message });
+    return next(error);
   }
 };
 
 /**
  * 🔍 Get a single round (with questions)
  */
-export const getRoundById = async (req, res) => {
+export const getRoundById = async (req, res, next) => {
   try {
     const { roundId } = req.params;
     const userId = req.user._id;
@@ -143,6 +146,6 @@ export const getRoundById = async (req, res) => {
 
     res.status(200).json({ round });
   } catch (error) {
-    res.status(500).json({ message: "Error fetching round", error: error.message });
+    return next(error);
   }
 };

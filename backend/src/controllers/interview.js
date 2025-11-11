@@ -10,7 +10,13 @@ export const createInterview = asyncHandler(async (req, res) => {
   const { company, role, date, location, status, salary, hr, feedback, nextSteps } = req.body;
 
   if (!company || !role) {
-    return res.status(400).json({ message: "Company and Role are required." });
+    return res.status(400).json({
+      message: "Validation failed",
+      errors: {
+        ...(company ? {} : { company: "Company is required" }),
+        ...(role ? {} : { role: "Role is required" }),
+      },
+    });
   }
 
   // Check for duplicate interview
@@ -115,18 +121,24 @@ export const updateInterview = asyncHandler(async (req, res) => {
  * @access Private
  */
 export const submitInterview = asyncHandler(async (req, res) => {
+  console.log('submitInterview called with ID:', req.params.id);
+  console.log('User ID:', req.user?._id);
+  
   const interview = await Interview.findOne({
     _id: req.params.id,
     user: req.user._id,
   });
 
   if (!interview) {
+    console.log('Interview not found for ID:', req.params.id);
     return res.status(404).json({ message: "Interview not found." });
   }
 
+  console.log('Found interview, updating status to completed');
   interview.status = "completed";
   await interview.save();
 
+  console.log('Interview submitted successfully');
   res.status(200).json({ message: "Interview submitted successfully.", interview });
 });
 

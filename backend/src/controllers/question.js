@@ -7,13 +7,16 @@ import mongoose from "mongoose";
  * @route POST /api/questions
  * @access Private
  */
-export const createQuestion = async (req, res) => {
+export const createQuestion = async (req, res, next) => {
   try {
     const { roundId, questionText, topics, difficulty, userAnswer, feedback, isPublic } = req.body;
 
     // ✅ Validation
     if (!roundId || !questionText) {
-      return res.status(400).json({ message: "Round ID and question text are required" });
+      const errors = {};
+      if (!roundId) errors.roundId = "Round ID is required";
+      if (!questionText) errors.question = "Question text is required";
+      return res.status(400).json({ message: "Validation failed", errors });
     }
 
     // ✅ Check if round exists
@@ -40,7 +43,7 @@ export const createQuestion = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating question:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    return next(error);
   }
 };
 
@@ -49,7 +52,7 @@ export const createQuestion = async (req, res) => {
  * @route GET /api/questions/round/:roundId
  * @access Private
  */
-export const getQuestionsByRound = async (req, res) => {
+export const getQuestionsByRound = async (req, res, next) => {
   try {
     const { roundId } = req.params;
 
@@ -62,7 +65,7 @@ export const getQuestionsByRound = async (req, res) => {
     res.status(200).json(questions);
   } catch (error) {
     console.error("Error fetching questions:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    return next(error);
   }
 };
 
@@ -71,7 +74,7 @@ export const getQuestionsByRound = async (req, res) => {
  * @route PUT /api/questions/:id
  * @access Private
  */
-export const updateQuestion = async (req, res) => {
+export const updateQuestion = async (req, res, next) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -88,7 +91,7 @@ export const updateQuestion = async (req, res) => {
     res.status(200).json({ message: "Question updated successfully", question });
   } catch (error) {
     console.error("Error updating question:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    return next(error);
   }
 };
 
@@ -97,7 +100,7 @@ export const updateQuestion = async (req, res) => {
  * @route DELETE /api/questions/:id
  * @access Private
  */
-export const deleteQuestion = async (req, res) => {
+export const deleteQuestion = async (req, res, next) => {
   try {
     const { id } = req.params;
 
@@ -111,7 +114,7 @@ export const deleteQuestion = async (req, res) => {
     res.status(200).json({ message: "Question deleted successfully" });
   } catch (error) {
     console.error("Error deleting question:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    return next(error);
   }
 };
 
@@ -120,7 +123,7 @@ export const deleteQuestion = async (req, res) => {
  * @route GET /api/questions/my
  * @access Private
  */
-export const getMyQuestions = async (req, res) => {
+export const getMyQuestions = async (req, res, next) => {
   try {
     const questions = await Question.find({ createdBy: req.user._id }).populate("round");
 
@@ -131,6 +134,6 @@ export const getMyQuestions = async (req, res) => {
     res.status(200).json(questions);
   } catch (error) {
     console.error("Error fetching user questions:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    return next(error);
   }
 };

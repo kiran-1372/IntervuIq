@@ -12,8 +12,10 @@ import { LoginPage } from "./pages/LoginPage";
 import { SignupPage } from "./pages/SignupPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { InterviewsPage } from "./pages/InterviewsPage";
-import { ResumeAnalysisPage } from "./pages/ResumeAnalysisPage";
+import { InterviewDetailPage } from "./pages/InterviewDetailPage";
+import ResumeAnalysisPage from "./pages/ResumeAnalysisPage";
 import { ColdEmailPage } from "./pages/ColdEmailPage";
+import { ColdEmailGeneratorPage } from "./pages/ColdEmailGeneratorPage";
 import { QuestionBankPage } from "./pages/QuestionBankPage";
 import { ContactPage } from "./pages/ContactPage";
 import AddInterviewPage from "./pages/AddInterviewPage";
@@ -32,8 +34,10 @@ function AnimatedRoutes() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/track-interviews" element={<InterviewsPage />} />
+        <Route path="/interviews/:id" element={<InterviewDetailPage />} />
         <Route path="/resume-analysis" element={<ResumeAnalysisPage />} />
         <Route path="/cold-email" element={<ColdEmailPage />} />
+        <Route path="/cold-email-generator" element={<ColdEmailGeneratorPage />} />
         <Route path="/questions" element={<QuestionBankPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/add-interview" element={<AddInterviewPage />} />

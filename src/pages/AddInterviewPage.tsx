@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Building2, 
@@ -29,7 +30,11 @@ import { Slider } from "@/components/ui/slider";
 import { Progress } from "@/components/ui/progress";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "@/hooks/use-toast";
+import { createInterview, submitInterview as apiSubmitInterview } from "@/api/interviews";
+import { createRound as apiCreateRound } from "@/api/rounds";
+import { createQuestion as apiCreateQuestion } from "@/api/questions";
 import { cn } from "@/lib/utils";
+import { useFieldErrors } from "@/hooks/useFieldErrors";
 import { format } from "date-fns";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -73,8 +78,11 @@ type InterviewData = {
 };
 
 export default function AddInterviewPage() {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
+  // validation errors (flat map) for interview/rounds/questions
+  const { errors: fieldErrors, setFieldError, getError, clearError, applyServerErrors, clearAll } = useFieldErrors();
   
   // Interview Details State
   const [interview, setInterview] = useState<InterviewData>({
@@ -105,33 +113,65 @@ export default function AddInterviewPage() {
 
   // Save Interview (Step 1)
   const saveInterviewDetails = async () => {
-    if (!interview.company || !interview.role) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in at least Company and Role fields.",
-        variant: "destructive",
-      });
+  const newErrors: Record<string, string> = {};
+    if (!interview.company) newErrors.company = "Company is required";
+    if (!interview.role) newErrors.role = "Role is required";
+    // validate phone if provided: expect 10 digits
+    if (interview.hrPhone) {
+      const digits = interview.hrPhone.replace(/\D/g, "");
+      if (digits.length !== 10) {
+        newErrors.hrPhone = "Phone number must be 10 digits";
+      }
+    }
+    // validate email if provided
+    if (interview.hrEmail) {
+      const emailRe = /^\S+@\S+\.\S+$/;
+      if (!emailRe.test(interview.hrEmail)) {
+        newErrors.hrEmail = "Enter a valid email address";
+      }
+    }
+    if (Object.keys(newErrors).length) {
+      // set each discovered field error
+      Object.keys(newErrors).forEach((k) => setFieldError(k, (newErrors as any)[k]));
+      // scroll to top of card or focus first invalid field could be added
       return;
     }
+    // clear interview-level errors
+    ['company', 'role', 'hrPhone', 'hrEmail'].forEach((k) => clearError(k));
 
     setIsSaving(true);
-    
-    // Simulate API call: POST /api/interviews
-    setTimeout(() => {
-      const mockInterviewId = `int_${Date.now()}`;
-      setInterview(prev => ({ 
-        ...prev, 
-        id: mockInterviewId, 
-        isSaved: true 
-      }));
-      setIsSaving(false);
+    try {
+      const payload = {
+        company: interview.company,
+        role: interview.role,
+        date: interview.date ? interview.date.toISOString() : undefined,
+        location: interview.location,
+        status: interview.status || 'draft',
+        salary: interview.salary,
+        hr: { name: interview.hrName, email: interview.hrEmail, phone: interview.hrPhone },
+        feedback: interview.feedback,
+        nextSteps: interview.nextSteps,
+      };
+
+      const res = await createInterview(payload);
+      const created = res.data.interview;
+      setInterview(prev => ({ ...prev, id: created._id, isSaved: true }));
       setCurrentStep(2);
-      
-      toast({
-        title: "✅ Interview Saved!",
-        description: "Now add rounds to this interview.",
-      });
-    }, 1000);
+      toast({ title: "✅ Interview Saved!", description: "Now add rounds to this interview." });
+    } catch (error) {
+      const resp = (error as any)?.response;
+      if (resp?.data?.errors && typeof resp.data.errors === 'object') {
+        // Map server validation errors into our flat fieldErrors map
+        const serverErrors: any = resp.data.errors;
+        // applyServerErrors will flatten nested objects and normalize hr.email -> hrEmail
+        applyServerErrors(serverErrors);
+      } else {
+        const msg = resp?.data?.message || (error as any)?.message || 'Failed to save interview';
+        toast({ title: 'Error', description: msg, variant: 'destructive' });
+      }
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Add Round (Step 2)
@@ -161,29 +201,48 @@ export default function AddInterviewPage() {
   // Save Round
   const saveRound = async (roundId: string) => {
     const round = rounds.find(r => r.id === roundId);
-    if (!round?.name || !round?.type) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in Round Name and Type.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // validate round client-side
+    if (!round?.name) setFieldError(`rounds.${roundId}.name`, "Round name is required");
+    if (!round?.type) setFieldError(`rounds.${roundId}.type`, "Round type is required");
+    if (!round?.name || !round?.type) return;
+    // clear previous round errors
+    clearError(`rounds.${roundId}.name`);
+    clearError(`rounds.${roundId}.type`);
 
     setIsSaving(true);
-    
-    // Simulate API call: POST /api/rounds?interviewId=${interview.id}
-    setTimeout(() => {
-      setRounds(rounds.map(r => 
-        r.id === roundId ? { ...r, isSaved: true } : r
-      ));
+    try {
+      if (!interview.id) throw new Error('Interview ID missing. Save interview first.');
+      const round = rounds.find(r => r.id === roundId)!;
+      const payload = {
+        roundName: round.name,
+        roundNumber: rounds.indexOf(round) + 1,
+        interviewerName: round.interviewer,
+        date: round.date ? round.date.toISOString() : undefined,
+        duration: undefined,
+      };
+
+      const res = await apiCreateRound(interview.id!, payload);
+      const created = res.data.round;
+      setRounds(rounds.map(r => r.id === roundId ? { ...r, id: created._id, isSaved: true } : r));
+      toast({ title: 'Round Saved!', description: 'You can now add questions to this round.' });
+    } catch (error) {
+      const resp = (error as any)?.response;
+      if (resp?.data?.errors && typeof resp.data.errors === 'object') {
+        // server returns errors like { name: '...' } or { type: '...' }
+        const srv = resp.data.errors;
+        Object.keys(srv).forEach((k) => {
+          // normalize server error entry to string (may be object like { message })
+          const val = srv[k];
+          const msg = val && typeof val === 'object' ? (val.message || String(val)) : String(val);
+          setFieldError(`rounds.${roundId}.${k}`, msg);
+        });
+      } else {
+        const msg = resp?.data?.message || (error as any)?.message || 'Failed to save round';
+        toast({ title: 'Error', description: msg, variant: 'destructive' });
+      }
+    } finally {
       setIsSaving(false);
-      
-      toast({
-        title: "Round Saved!",
-        description: "You can now add questions to this round.",
-      });
-    }, 800);
+    }
   };
 
   // Delete Round
@@ -247,41 +306,82 @@ export default function AddInterviewPage() {
   const saveQuestion = async (roundId: string, questionId: string) => {
     const round = rounds.find(r => r.id === roundId);
     const question = round?.questions.find(q => q.id === questionId);
-    
+    const qKey = `questions.${roundId}.${questionId}`;
     if (!question?.question) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in the question text.",
-        variant: "destructive",
-      });
+      setFieldError(qKey, 'Question text is required');
       return;
     }
+    clearError(qKey);
 
     setIsSaving(true);
-    
-    // Simulate API call: POST /api/questions?roundId=${roundId}
-    setTimeout(() => {
+    try {
+      const round = rounds.find(r => r.id === roundId)!;
+      const question = round.questions.find(q => q.id === questionId)!;
+      const payload = {
+        roundId: roundId,
+        questionText: question.question,
+        topics: question.topics,
+        difficulty: question.difficulty,
+        userAnswer: question.answer,
+        feedback: question.feedback,
+        isPublic: question.isPublic,
+      };
+
+      const res = await apiCreateQuestion(payload);
+      const created = res.data.question;
+      // update question id and keep saved state if desired
+      setRounds(rounds.map(r => {
+        if (r.id === roundId) {
+          return {
+            ...r,
+            questions: r.questions.map(q => q.id === questionId ? { ...q, id: created._id } : q)
+          };
+        }
+        return r;
+      }));
+
+      // clear any question error on success
+      clearError(qKey);
+      toast({ title: 'Question Saved!', description: 'Your question has been added successfully.' });
+    } catch (error) {
+      const resp = (error as any)?.response;
+      if (resp?.data?.errors && typeof resp.data.errors === 'object') {
+        // server typically returns { question: '...' } for question text
+        const key = `questions.${roundId}.${questionId}`;
+  let message: any = resp.data.errors.question || resp.data.errors.questionText || resp.data.errors.message || Object.values(resp.data.errors)[0];
+  // ensure we set a string message (server may return validation objects)
+  if (message && typeof message === 'object') message = message.message || JSON.stringify(message);
+  setFieldError(key, String(message));
+      } else {
+        const msg = resp?.data?.message || (error as any)?.message || 'Failed to save question';
+        toast({ title: 'Error', description: msg, variant: 'destructive' });
+      }
+    } finally {
       setIsSaving(false);
-      toast({
-        title: "Question Saved!",
-        description: "Your question has been added successfully.",
-      });
-    }, 600);
+    }
   };
 
   // Submit Final Interview
   const submitInterview = async () => {
+    if (!interview.id) {
+      toast({ title: 'Error', description: 'Interview ID missing', variant: 'destructive' });
+      return;
+    }
+
     setIsSaving(true);
-    
-    // Simulate API call: PATCH /api/interviews/:id/submit
-    setTimeout(() => {
+    try {
+      await apiSubmitInterview(interview.id);
+      toast({ title: 'Interview Submitted!', description: 'Your interview has been marked as completed.' });
+      // Redirect to interviews page after successful submit
+      setTimeout(() => {
+        navigate('/track-interviews');
+      }, 1500);
+    } catch (error) {
+      const msg = (error as any)?.response?.data?.message || (error as any)?.message || 'Failed to submit interview';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
+    } finally {
       setIsSaving(false);
-      toast({
-        title: "Interview Submitted!",
-        description: "Your interview has been marked as completed.",
-      });
-      setCurrentStep(3);
-    }, 1000);
+    }
   };
 
   return (
@@ -345,10 +445,11 @@ export default function AddInterviewPage() {
           </Card>
         </motion.div>
 
-        <AnimatePresence mode="wait">
+  <AnimatePresence>
           {/* Step 1: Interview Details */}
           {currentStep >= 1 && (
             <motion.div
+              key="step-1"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -384,9 +485,15 @@ export default function AddInterviewPage() {
                       <Input
                         placeholder="e.g., Google"
                         value={interview.company}
-                        onChange={(e) => updateInterview("company", e.target.value)}
+                        onChange={(e) => {
+                          updateInterview("company", e.target.value);
+                          if (getError('company')) clearError('company');
+                        }}
                         disabled={interview.isSaved}
+                        hasError={!!getError('company')}
+                        className=""
                       />
+                      {getError('company') && <p className="text-sm text-red-600 mt-1">{getError('company')}</p>}
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium flex items-center gap-2">
@@ -396,9 +503,15 @@ export default function AddInterviewPage() {
                       <Input
                         placeholder="e.g., Senior Software Engineer"
                         value={interview.role}
-                        onChange={(e) => updateInterview("role", e.target.value)}
+                        onChange={(e) => {
+                          updateInterview("role", e.target.value);
+                          if (getError('role')) clearError('role');
+                        }}
                         disabled={interview.isSaved}
+                        hasError={!!getError('role')}
+                        className=""
                       />
+                      {getError('role') && <p className="text-sm text-red-600 mt-1">{getError('role')}</p>}
                     </div>
                   </div>
 
@@ -505,9 +618,14 @@ export default function AddInterviewPage() {
                           type="email"
                           placeholder="hr@company.com"
                           value={interview.hrEmail}
-                          onChange={(e) => updateInterview("hrEmail", e.target.value)}
+                          onChange={(e) => {
+                            updateInterview("hrEmail", e.target.value);
+                            if (getError('hrEmail')) clearError('hrEmail');
+                          }}
                           disabled={interview.isSaved}
+                          hasError={!!getError('hrEmail')}
                         />
+                        {getError('hrEmail') && <p className="text-sm text-red-600 mt-1">{getError('hrEmail')}</p>}
                       </div>
                       <div className="space-y-2">
                         <label className="text-sm font-medium flex items-center gap-2">
@@ -517,9 +635,15 @@ export default function AddInterviewPage() {
                         <Input
                           placeholder="+1 234 567 8900"
                           value={interview.hrPhone}
-                          onChange={(e) => updateInterview("hrPhone", e.target.value)}
+                          onChange={(e) => {
+                            updateInterview("hrPhone", e.target.value);
+                            if (getError('hrPhone')) clearError('hrPhone');
+                          }}
                           disabled={interview.isSaved}
+                          hasError={!!getError('hrPhone')}
+                          className=""
                         />
+                        {getError('hrPhone') && <p className="text-sm text-red-600 mt-1">{getError('hrPhone')}</p>}
                       </div>
                     </div>
                   </div>
@@ -587,6 +711,7 @@ export default function AddInterviewPage() {
           {/* Step 2: Add Rounds */}
           {interview.isSaved && (
             <motion.div
+              key="step-2"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-6"
@@ -649,18 +774,29 @@ export default function AddInterviewPage() {
                                   <Input
                                     placeholder="e.g., Technical Round 1"
                                     value={round.name}
-                                    onChange={(e) => updateRound(round.id, "name", e.target.value)}
+                                    onChange={(e) => {
+                                      updateRound(round.id, "name", e.target.value);
+                                      const key = `rounds.${round.id}.name`;
+                                      if (getError(key)) clearError(key);
+                                    }}
                                     disabled={round.isSaved}
+                                    hasError={!!getError(`rounds.${round.id}.name`)}
+                                    className=""
                                   />
+                                  {getError(`rounds.${round.id}.name`) && <p className="text-sm text-red-600 mt-1">{getError(`rounds.${round.id}.name`)}</p>}
                                 </div>
                                 <div className="space-y-2">
                                   <label className="text-sm font-medium">Type *</label>
                                   <Select
                                     value={round.type}
-                                    onValueChange={(v) => updateRound(round.id, "type", v)}
+                                    onValueChange={(v) => {
+                                      updateRound(round.id, "type", v);
+                                      const key = `rounds.${round.id}.type`;
+                                      if (getError(key)) clearError(key);
+                                    }}
                                     disabled={round.isSaved}
                                   >
-                                    <SelectTrigger>
+                                    <SelectTrigger hasError={!!getError(`rounds.${round.id}.type`)}>
                                       <SelectValue placeholder="Select type" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -838,10 +974,18 @@ export default function AddInterviewPage() {
                                               <label className="text-sm font-medium">Question Text *</label>
                                               <Textarea
                                                 placeholder="Enter the interview question..."
+                                                hasError={!!getError(`questions.${round.id}.${question.id}`)}
                                                 className="min-h-[80px]"
                                                 value={question.question}
-                                                onChange={(e) => updateQuestion(round.id, question.id, "question", e.target.value)}
+                                                onChange={(e) => {
+                                                  updateQuestion(round.id, question.id, "question", e.target.value);
+                                                  const key = `questions.${round.id}.${question.id}`;
+                                                  if (getError(key)) clearError(key);
+                                                }}
                                               />
+                                              {getError(`questions.${round.id}.${question.id}`) && (
+                                                <p className="text-sm text-red-600 mt-1">{getError(`questions.${round.id}.${question.id}`)}</p>
+                                              )}
                                             </div>
 
                                             <div className="grid md:grid-cols-2 gap-4">
@@ -946,6 +1090,7 @@ export default function AddInterviewPage() {
           {/* Final Step: Review & Submit */}
           {interview.isSaved && rounds.some(r => r.isSaved) && (
             <motion.div
+              key="step-3"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-6"

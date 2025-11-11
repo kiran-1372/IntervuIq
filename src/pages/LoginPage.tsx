@@ -14,6 +14,7 @@ export function LoginPage() {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -21,12 +22,40 @@ export function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
+    // client-side validation
+    const newErrors: typeof errors = {};
+    if (!email) newErrors.email = "Email is required";
+    else if (!/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Enter a valid email";
+    if (!password) newErrors.password = "Password is required";
+
+    if (Object.keys(newErrors).length) {
+      setErrors(newErrors);
+      setLoading(false);
+      return;
+    }
+
+    setErrors({});
     try {
       await login(email, password, remember);
       toast.success("Welcome back!");
       navigate("/dashboard");
     } catch (error) {
-      toast.error("Invalid credentials");
+      const resp = (error as any)?.response;
+      // If server returned field-specific validation, map it to form errors and skip toast
+      if (resp?.data?.errors && typeof resp.data.errors === 'object') {
+        const serverErrors: any = resp.data.errors;
+        const normalized: any = {};
+        Object.keys(serverErrors).forEach((k) => {
+          const v = serverErrors[k];
+          if (v && typeof v === 'object' && typeof v.message === 'string') normalized[k] = v.message;
+          else if (typeof v === 'string') normalized[k] = v;
+          else normalized[k] = String(v);
+        });
+        setErrors(normalized);
+      } else {
+        const msg = resp?.data?.message || (error as any)?.message || "Invalid credentials";
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -83,10 +112,15 @@ export function LoginPage() {
                     type="email"
                     placeholder="you@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                    }}
                     required
+                    hasError={!!errors.email}
                     className="transition-smooth"
                   />
+                  {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -96,10 +130,15 @@ export function LoginPage() {
                     type="password"
                     placeholder="••••••••"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+                    }}
                     required
+                    hasError={!!errors.password}
                     className="transition-smooth"
                   />
+                  {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password}</p>}
                 </div>
 
                 <div className="flex items-center justify-between">

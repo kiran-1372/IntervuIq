@@ -35,9 +35,10 @@ const navigation = [
   { name: "Track Interviews", href: "/track-interviews", icon: Target },
   { name: "Add Interview", href: "/add-interview", icon: PlusCircle },
   { name: "Resume Analysis", href: "/resume-analysis", icon: FileText },
-  { name: "Cold Email", href: "/cold-email", icon: Mail },
+  { name: "Cold Email", href: "/cold-email-generator", icon: Mail },
   { name: "Questions", href: "/questions", icon: BookOpen },
   { name: "Contact", href: "/contact", icon: MessageSquare },
+   { name: "Login", href: "/login", icon: null },
 ];
 
 export function Header() {

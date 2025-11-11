@@ -1,10 +1,14 @@
 import dotenv from "dotenv";
+
+// Load environment variables first
+dotenv.config();
+
 import app from "./src/app.js";
 import { connectDB } from "./src/config/db.js";
 
-dotenv.config();
+// Connect to database
 connectDB();
-console.log("jwt_secret",process.env.JWT_SECRET)
+
 const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

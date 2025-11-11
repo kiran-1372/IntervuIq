@@ -36,6 +36,46 @@ npm i
 npm run dev
 ```
 
+## Running the full project locally (frontend + backend)
+
+This repository has a Vite + React frontend and an Express backend located in the `backend/` folder. The frontend currently uses mock data by default; follow the steps below to run both servers and prepare environment variables when you are ready to integrate the real backend.
+
+Prerequisites
+- Node.js (LTS) and npm installed
+- Optional: MongoDB running locally or a MongoDB Atlas connection string
+
+1) Install frontend dependencies and start Vite (from project root):
+
+```powershell
+cd 'C:\Users\KIRAN YADAV\OneDrive\Desktop\VsCodeFile\IntervuIq'
+npm install
+npm run dev
+```
+
+2) Install backend dependencies and start server (in a new terminal):
+
+```powershell
+cd 'C:\Users\KIRAN YADAV\OneDrive\Desktop\VsCodeFile\IntervuIq\backend'
+npm install
+
+# Copy the example env file and update values (do NOT commit your .env)
+copy .env.example .env
+
+# Example: set temporary env vars in the current PowerShell session and start the server
+$env:MONGO_URI = 'mongodb://127.0.0.1:27017/intervuiq_dev'
+$env:JWT_SECRET = 'changeme'
+$env:CLIENT_ORIGIN = 'http://localhost:5173'
+node server.js
+```
+
+Notes
+- The backend's example env file is at `backend/.env.example` and lists `MONGO_URI`, `JWT_SECRET`, `CLIENT_ORIGIN`, `PORT`, and `NODE_ENV`.
+- By default, the frontend uses mock data in `src/data/dummyData.ts`. After the backend is implemented, we'll add an Axios client and wire API calls.
+- For secure sessions, the backend will set HttpOnly cookies (recommended). If you prefer token-in-JS (Authorization header), the frontend will set the token on login.
+
+If you'd like, I can create `.env.example` (done) and update the project to use a real backend next (Auth, Interviews CRUD). Tell me which step to start with.
+
+
 **Edit a file directly in GitHub**
 
 - Navigate to the desired file(s).

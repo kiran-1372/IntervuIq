@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,59 +23,124 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from "lucide-react";
-import { detailedInterviews, DetailedInterview } from "@/data/dummyData";
-import { InterviewDetailModal } from "@/components/interviews/InterviewDetailModal";
-
-// Convert detailed interviews to summary format for the list view
-const mockInterviews = detailedInterviews.map(interview => ({
-  id: parseInt(interview.id),
-  company: interview.company,
-  role: interview.role,
-  date: interview.date,
-  status: interview.status,
-  rounds: { 
-    completed: interview.rounds.filter(r => r.status === 'completed').length, 
-    total: interview.rounds.length 
-  },
-  confidence: Math.round(
-    interview.rounds
-      .filter(r => r.status === 'completed')
-      .reduce((sum, r) => sum + r.confidence, 0) / 
-    Math.max(interview.rounds.filter(r => r.status === 'completed').length, 1)
-  ),
-  tags: Array.from(new Set(
-    interview.rounds.flatMap(r => 
-      r.questions.flatMap(q => q.topics.slice(0, 2))
-    )
-  )).slice(0, 3)
-}));
+import { getUserInterviews } from "@/api/interviews";
+import { toast } from "sonner";
 
 const statusConfig = {
   offer: { label: "Offer", color: "bg-success text-success-foreground", icon: CheckCircle2 },
   rejected: { label: "Rejected", color: "bg-error text-error-foreground", icon: XCircle },
   pending: { label: "Pending", color: "bg-warning text-warning-foreground", icon: Clock },
-  interviewing: { label: "Interviewing", color: "bg-info text-info-foreground", icon: AlertCircle }
+  interviewing: { label: "Interviewing", color: "bg-info text-info-foreground", icon: AlertCircle },
+  completed: { label: "Completed", color: "bg-success text-success-foreground", icon: CheckCircle2 },
+  draft: { label: "Draft", color: "bg-muted text-muted-foreground", icon: Clock }
 };
 
+interface Interview {
+  _id: string;
+  company: string;
+  role: string;
+  date?: string;
+  status: string;
+  rounds?: Array<{
+    confidence?: number;
+    questions?: Array<{ topics?: string[] }>;
+  }>;
+}
+
 export function InterviewsPage() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedInterview, setSelectedInterview] = useState<DetailedInterview | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleInterviewClick = (interviewId: number) => {
-    const interview = detailedInterviews.find(i => i.id === interviewId.toString());
-    if (interview) {
-      setSelectedInterview(interview);
-      setIsModalOpen(true);
+  useEffect(() => {
+    fetchInterviews();
+  }, []);
+
+  const fetchInterviews = async () => {
+    try {
+      setIsLoading(true);
+      const response = await getUserInterviews();
+      setInterviews(response.data || []);
+    } catch (error: any) {
+      console.error("Failed to fetch interviews:", error);
+      toast.error("Failed to load interviews");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const filteredInterviews = mockInterviews.filter(interview => {
-    const matchesSearch = interview.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         interview.role.toLowerCase().includes(searchTerm.toLowerCase());
+  const handleInterviewClick = (interviewId: string) => {
+    navigate(`/interviews/${interviewId}`);
+  };
+
+  // Calculate stats from interviews
+  const stats = {
+    total: interviews.length,
+    offers: interviews.filter(i => i.status === 'offer').length,
+    pending: interviews.filter(i => i.status === 'pending' || i.status === 'interviewing').length,
+    successRate: interviews.length > 0 
+      ? Math.round((interviews.filter(i => i.status === 'offer').length / interviews.length) * 100)
+      : 0
+  };
+
+  // Process interviews for display
+  const processedInterviews = interviews.map(interview => {
+    const rounds = interview.rounds || [];
+    const roundsCompleted = rounds.length;
+    
+    // Calculate average confidence
+    let avgConfidence = 0;
+    if (rounds.length > 0) {
+      const confidences = rounds
+        .map(r => r.confidence || 0)
+        .filter(c => c > 0);
+      if (confidences.length > 0) {
+        avgConfidence = Math.round(
+          confidences.reduce((sum, c) => sum + c, 0) / confidences.length
+        );
+      }
+    }
+
+    // Extract top 3 most frequent topics
+    const allTopics: string[] = [];
+    rounds.forEach(round => {
+      if (round.questions) {
+        round.questions.forEach(q => {
+          if (q.topics && Array.isArray(q.topics)) {
+            allTopics.push(...q.topics);
+          }
+        });
+      }
+    });
+    
+    // Count topic frequency
+    const topicCount: Record<string, number> = {};
+    allTopics.forEach(topic => {
+      topicCount[topic] = (topicCount[topic] || 0) + 1;
+    });
+    
+    // Get top 3 most frequent
+    const topTags = Object.entries(topicCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([tag]) => tag);
+
+    return {
+      ...interview,
+      roundsCompleted,
+      avgConfidence: avgConfidence || null,
+      tags: topTags
+    };
+  });
+
+  const filteredInterviews = processedInterviews.filter(interview => {
+    const matchesSearch = (interview.company || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (interview.role || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || interview.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -119,7 +185,7 @@ export function InterviewsPage() {
               <Target className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <div className="text-2xl font-bold">12</div>
+              <div className="text-2xl font-bold">{stats.total}</div>
               <div className="text-sm text-muted-foreground">Total Interviews</div>
             </div>
           </div>
@@ -131,7 +197,7 @@ export function InterviewsPage() {
               <CheckCircle2 className="w-5 h-5 text-success" />
             </div>
             <div>
-              <div className="text-2xl font-bold">3</div>
+              <div className="text-2xl font-bold">{stats.offers}</div>
               <div className="text-sm text-muted-foreground">Offers</div>
             </div>
           </div>
@@ -143,7 +209,7 @@ export function InterviewsPage() {
               <TrendingUp className="w-5 h-5 text-secondary" />
             </div>
             <div>
-              <div className="text-2xl font-bold">78%</div>
+              <div className="text-2xl font-bold">{stats.successRate}%</div>
               <div className="text-sm text-muted-foreground">Success Rate</div>
             </div>
           </div>
@@ -155,7 +221,7 @@ export function InterviewsPage() {
               <Clock className="w-5 h-5 text-accent" />
             </div>
             <div>
-              <div className="text-2xl font-bold">2</div>
+              <div className="text-2xl font-bold">{stats.pending}</div>
               <div className="text-sm text-muted-foreground">Pending</div>
             </div>
           </div>
@@ -193,95 +259,103 @@ export function InterviewsPage() {
           </SelectContent>
         </Select>
 
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => navigate('/add-interview')}>
           <Plus className="w-4 h-4" />
           Add Interview
         </Button>
       </motion.div>
 
       {/* Interview Cards */}
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {filteredInterviews.map((interview, index) => {
-          const statusInfo = statusConfig[interview.status as keyof typeof statusConfig];
-          
-          return (
-            <motion.div
-              key={interview.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 + index * 0.1, duration: 0.6 }}
-            >
-              <Card 
-                className="p-6 gradient-card border-0 shadow-md hover:shadow-glow transition-all duration-300 group cursor-pointer"
-                onClick={() => handleInterviewClick(interview.id)}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {filteredInterviews.map((interview, index) => {
+            const statusInfo = statusConfig[interview.status as keyof typeof statusConfig] || statusConfig.pending;
+            
+            return (
+              <motion.div
+                key={interview._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + index * 0.1, duration: 0.6 }}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-primary" />
+                <Card 
+                  className="p-6 gradient-card border-0 shadow-md hover:shadow-glow transition-all duration-300 group cursor-pointer"
+                  onClick={() => handleInterviewClick(interview._id)}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <Building2 className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold group-hover:text-primary transition-colors">
+                          {interview.company || 'N/A'}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">{interview.role || 'N/A'}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold group-hover:text-primary transition-colors">
-                        {interview.company}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">{interview.role}</p>
-                    </div>
-                  </div>
-                  
-                  <Badge className={statusInfo.color}>
-                    <statusInfo.icon className="w-3 h-3 mr-1" />
-                    {statusInfo.label}
-                  </Badge>
-                </div>
-
-                <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4" />
-                  {new Date(interview.date).toLocaleDateString()}
-                </div>
-
-                {/* Progress */}
-                <div className="mb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium">Interview Rounds</span>
-                    <span className="text-sm text-muted-foreground">
-                      {interview.rounds.completed}/{interview.rounds.total}
-                    </span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div 
-                      className="bg-primary h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${(interview.rounds.completed / interview.rounds.total) * 100}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Confidence Score */}
-                <div className="mb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium">Confidence</span>
-                    <span className="text-sm text-muted-foreground">{interview.confidence}%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div 
-                      className="bg-secondary h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${interview.confidence}%` }}
-                    />
-                  </div>
-                </div>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2">
-                  {interview.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
-                      {tag}
+                    
+                    <Badge className={statusInfo.color}>
+                      <statusInfo.icon className="w-3 h-3 mr-1" />
+                      {statusInfo.label}
                     </Badge>
-                  ))}
-                </div>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
+                  </div>
+
+                  {interview.date && (
+                    <div className="flex items-center gap-2 mb-4 text-sm text-muted-foreground">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(interview.date).toLocaleDateString()}
+                    </div>
+                  )}
+
+                  {/* Progress */}
+                  {interview.roundsCompleted > 0 && (
+                    <div className="mb-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium">Rounds Completed</span>
+                        <span className="text-sm text-muted-foreground">
+                          {interview.roundsCompleted}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Confidence Score */}
+                  {interview.avgConfidence !== null && interview.avgConfidence > 0 && (
+                    <div className="mb-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-sm font-medium">Confidence</span>
+                        <span className="text-sm text-muted-foreground">{interview.avgConfidence}%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div 
+                          className="bg-secondary h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${interview.avgConfidence}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tags */}
+                  {interview.tags && interview.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {interview.tags.map((tag) => (
+                        <Badge key={tag} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
 
       {filteredInterviews.length === 0 && (
         <motion.div
@@ -297,18 +371,12 @@ export function InterviewsPage() {
               ? "Try adjusting your filters" 
               : "Start tracking your interview journey"}
           </p>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => navigate('/add-interview')}>
             <Plus className="w-4 h-4" />
             Add Your First Interview
           </Button>
         </motion.div>
       )}
-
-      <InterviewDetailModal
-        interview={selectedInterview}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
     </motion.div>
   );
 }
