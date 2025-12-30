@@ -1,13 +1,9 @@
 import { useState } from 'react';
 import axios from 'axios';
-import {
-  Card,
-  Button,
-  Textarea,
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@/components/ui';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2 } from 'lucide-react';
 
 const ResumeAnalysis = () => {

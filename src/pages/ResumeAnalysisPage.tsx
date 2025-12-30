@@ -7,16 +7,29 @@ interface StrengthItem {
 }
 
 interface SkillResource {
-  type: 'course' | 'project' | 'article' | 'video';
+  type: 'course' | 'project' | 'article' | 'video' | 'documentation' | 'practice';
   title: string;
   url: string;
   provider: string;
+  description?: string;
+  difficulty?: string;
+  duration?: string;
+}
+
+interface PracticalStep {
+  step: string;
+  description: string;
+  estimatedTime?: string;
 }
 
 interface SkillGap {
   skill: string;
   importance: 'high' | 'medium' | 'low';
   resources: SkillResource[];
+  context?: string;
+  currentLevel?: string;
+  requiredLevel?: string;
+  practicalSteps?: PracticalStep[];
 }
 
 interface AnalysisData {
